@@ -188,12 +188,6 @@ class MSwp
         }
     end
 
-    def neighbors(pos)
-        @map.neighbor8_with_index(pos).map { |(neighbor, i)|
-            [Marshal.load(Marshal.dump(neighbor)).freeze, i]
-        }
-    end
-
     def each
         @map.each_with_index { |cell, pos|
             yield(Marshal.load(Marshal.dump(cell)).freeze, pos)
