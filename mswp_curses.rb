@@ -21,12 +21,6 @@ class Cursor
     attr_reader :pos
 end
 
-FieldWidth = ARGV[0].to_i
-FieldHeight = ARGV[1].to_i
-FieldDepth = ARGV[2].to_i
-FieldHyperDepth = ARGV[3].to_i
-NumberOfMines = ARGV[4].to_i
-
 class CursesRenderer
     CellWidth = 2
     CellHeight = 1
@@ -139,6 +133,12 @@ class CursesRenderer
         Curses.attroff(attrs)
     end
 end
+
+FieldWidth = ARGV[0].to_i
+FieldHeight = ARGV[1].to_i
+FieldDepth = ARGV[2].to_i
+FieldHyperDepth = ARGV[3].to_i
+NumberOfMines = ARGV[4].to_i
 
 renderer = CursesRenderer.new(FieldHyperDepth, FieldDepth, FieldHeight, FieldWidth)
 
