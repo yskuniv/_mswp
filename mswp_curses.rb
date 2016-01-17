@@ -27,56 +27,51 @@ MAP_DEPTH = ARGV[2].to_i
 MAP_HYPER_DEPTH = ARGV[3].to_i
 NR_MINES = ARGV[4].to_i
 
+def curses_print(str, y, x, attrs)
+    Curses.setpos(y, x)
+    Curses.attron(attrs)
+    Curses.addstr(str)
+    Curses.attroff(attrs)
+end
+
 def print_field(ms, cur)
-    Curses.setpos(0, 0)
     header = "Mines: #{ms.nr_mines}, Flagged: #{ms.nr_flagged_cells}, Untouched: #{ms.nr_untouched_cells}, Position: (#{cur.pos.reverse.join(', ')})"
     header << " " * (Curses.cols - header.length)
-    Curses.attron(Curses.color_pair(2))
-    Curses.addstr(header)
-    Curses.attroff(Curses::A_COLOR)
+    curses_print header, 0, 0, Curses.color_pair(2)
 
     ms.each do |cell, pos|
+        y = pos[2] + (MAP_HEIGHT + 1) * pos[0] + 2
+        x = 2 * pos[3] + (MAP_WIDTH + 1) * 2 * pos[1]
+
         offset = ((pos == cur.pos) ?
                   10 : (pos.each_index.inject(true) { |tmp, i|
                             (tmp and (pos[i] - cur.pos[i]).abs <= 1)
                         } ?
                         5 : 0))
 
-        Curses.setpos(pos[2] + (MAP_HEIGHT + 1) * pos[0] + 2, 2 * pos[3] + (MAP_WIDTH + 1) * 2 * pos[1])
-
-        if ms.active
-            if cell.isFlagged
-                Curses.attron(Curses.color_pair(3 + offset))
-                Curses.addstr(" !")
-                Curses.attroff(Curses::A_COLOR)
-            elsif cell.isDoubted
-                Curses.attron(Curses.color_pair(4 + offset))
-                Curses.addstr(" ?")
-                Curses.attroff(Curses::A_COLOR)
-            elsif cell.isTouched
-                Curses.attron(Curses.color_pair(1 + offset))
-                Curses.addstr((cell.getNumberOfNeighborMines == 0) ?
+        str, attrs = if ms.active
+                         if cell.isFlagged
+                             [" !", Curses.color_pair(3 + offset)]
+                         elsif cell.isDoubted
+                             [" ?", Curses.color_pair(4 + offset)]
+                         elsif cell.isTouched
+                             [(cell.getNumberOfNeighborMines == 0) ?
                                   " ." :
-                                  sprintf('%2d', cell.getNumberOfNeighborMines))
-                Curses.attroff(Curses::A_COLOR)
-            else
-                Curses.attron(Curses.color_pair(2 + offset))
-                Curses.addstr("  ")
-                Curses.attroff(Curses::A_COLOR)
-            end
-        else
-            if cell.isMined
-                Curses.attron(Curses.color_pair(5 + offset))
-                Curses.addstr(" *")
-                Curses.attroff(Curses::A_COLOR)
-            else
-                Curses.attron(Curses.color_pair(1 + offset))
-                Curses.addstr((cell.getNumberOfNeighborMines == 0) ?
-                              " ." :
-                              sprintf('%2d', cell.getNumberOfNeighborMines))
-                Curses.attroff(Curses::A_COLOR)
-            end
-        end
+                                  sprintf('%2d', cell.getNumberOfNeighborMines), Curses.color_pair(1 + offset)]
+                         else
+                             ["  ", Curses.color_pair(2 + offset)]
+                         end
+                     else
+                         if cell.isMined
+                             [" *", Curses.color_pair(5 + offset)]
+                         else
+                             [(cell.getNumberOfNeighborMines == 0) ?
+                                  " ." :
+                                  sprintf('%2d', cell.getNumberOfNeighborMines), Curses.color_pair(1 + offset)]
+                         end
+                     end
+
+        curses_print str, y, x, attrs
     end
 
     Curses.refresh
