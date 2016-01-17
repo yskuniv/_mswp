@@ -33,7 +33,12 @@ class CursesRenderer
     HeaderHeight = 2
     MarginBtwDim = 1
 
-    def initialize
+    def initialize(field_hyper_depth, field_depth, field_height, field_width)
+        @field_hyper_depth = field_hyper_depth
+        @field_depth = field_depth
+        @field_height = field_height
+        @field_width = field_width
+
         Curses.init_screen
         Curses.start_color
         Curses.init_pair(1, Curses::COLOR_WHITE, Curses::COLOR_BLACK)
@@ -65,8 +70,8 @@ class CursesRenderer
                      0, 0, Curses.color_pair(2)
 
         ms.each do |cell, pos|
-            y = CellHeight * ((FieldHeight + MarginBtwDim) * pos[0] + pos[2]) + HeaderHeight
-            x = CellWidth * ((FieldWidth + MarginBtwDim) * pos[1] + pos[3])
+            y = CellHeight * ((@field_height + MarginBtwDim) * pos[0] + pos[2]) + HeaderHeight
+            x = CellWidth * ((@field_width + MarginBtwDim) * pos[1] + pos[3])
 
             color_offset = case
                            when pos == cur_pos
@@ -114,13 +119,13 @@ class CursesRenderer
     end
 
     def print_gameover
-        Curses.setpos(CellHeight * (FieldHeight + MarginBtwDim) * FieldHyperDepth + 2, 0)
+        Curses.setpos(CellHeight * (@field_height + MarginBtwDim) * @field_hyper_depth + 2, 0)
         Curses.addstr('Game Over...')
         Curses.refresh
     end
 
     def print_gameclear
-        Curses.setpos(CellHeight * (FieldHeight + MarginBtwDim) * FieldHyperDepth + 2, 0)
+        Curses.setpos(CellHeight * (@field_height + MarginBtwDim) * @field_hyper_depth + 2, 0)
         Curses.addstr('Game Clear!!')
         Curses.refresh
     end
@@ -135,7 +140,7 @@ class CursesRenderer
     end
 end
 
-renderer = CursesRenderer.new
+renderer = CursesRenderer.new(FieldHyperDepth, FieldDepth, FieldHeight, FieldWidth)
 
 ms = MSwp.new([FieldHyperDepth, FieldDepth, FieldHeight, FieldWidth], NumberOfMines)
 cur = Cursor.new([FieldHyperDepth, FieldDepth, FieldHeight, FieldWidth])
