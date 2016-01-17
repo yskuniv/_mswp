@@ -53,10 +53,10 @@ class MSwp
         end
     end
 
-    class GameOverException < Exception
+    class GameOverException < StandardError
     end
 
-    class GameClearException < Exception
+    class GameClearException < StandardError
     end
 
     def initialize(length, nr_mines)
