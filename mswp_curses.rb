@@ -29,9 +29,10 @@ NR_MINES = ARGV[4].to_i
 
 def print_field(ms, cur)
     Curses.setpos(0, 0)
-    str = "Mines: #{ms.nr_mines}, Flagged: #{ms.nr_flagged_cells}, Untouched: #{ms.nr_untouched_cells}, Position: (#{cur.pos.reverse.join(', ')})"
+    header = "Mines: #{ms.nr_mines}, Flagged: #{ms.nr_flagged_cells}, Untouched: #{ms.nr_untouched_cells}, Position: (#{cur.pos.reverse.join(', ')})"
+    header << " " * (Curses.cols - header.length)
     Curses.attron(Curses.color_pair(2))
-    Curses.addstr(str << " " * (Curses.cols - str.length))
+    Curses.addstr(header)
     Curses.attroff(Curses::A_COLOR)
 
     ms.each { |cell, pos|
