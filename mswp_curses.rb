@@ -142,7 +142,7 @@ cur = Cursor.new([MAP_HYPER_DEPTH, MAP_DEPTH, MAP_HEIGHT, MAP_WIDTH])
 
 th = Thread.new do
     count = 0
-    while true
+    loop do
         renderer.print_time(count / 60, count % 60)
 
         sleep 1
