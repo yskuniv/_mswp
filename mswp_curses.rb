@@ -107,6 +107,24 @@ class CursesRenderer
         Curses.refresh
     end
 
+    def print_time(min, sec)
+        Curses.setpos(1, 0)
+        Curses.addstr(sprintf('TIME: %02d:%02d', min, sec))
+        Curses.refresh
+    end
+
+    def print_gameover
+        Curses.setpos((MAP_HEIGHT + 1) * MAP_HYPER_DEPTH + 2, 0)
+        Curses.addstr('Game Over...')
+        Curses.refresh
+    end
+
+    def print_gameclear
+        Curses.setpos((MAP_HEIGHT + 1) * MAP_HYPER_DEPTH + 2, 0)
+        Curses.addstr('Game Clear!!')
+        Curses.refresh
+    end
+
     private
 
     def curses_print(str, y, x, attrs)
@@ -125,9 +143,7 @@ cur = Cursor.new([MAP_HYPER_DEPTH, MAP_DEPTH, MAP_HEIGHT, MAP_WIDTH])
 th = Thread.new do
     count = 0
     while true
-        Curses.setpos(1, 0)
-        Curses.addstr(sprintf('TIME: %02d:%02d', count / 60, count % 60))
-        Curses.refresh
+        renderer.print_time(count / 60, count % 60)
 
         sleep 1
         count += 1
@@ -181,16 +197,12 @@ begin
 rescue MSwp::GameOverException
     th.kill
     renderer.print_field(ms, cur)
-    Curses.setpos((MAP_HEIGHT + 1) * MAP_HYPER_DEPTH + 2, 0)
-    Curses.addstr('Game Over...')
-    Curses.refresh
+    renderer.print_gameover
     while Curses.getch != ?q; end
 rescue MSwp::GameClearException
     th.kill
     renderer.print_field(ms, cur)
-    Curses.setpos((MAP_HEIGHT + 1) * MAP_HYPER_DEPTH + 2, 0)
-    Curses.addstr('Game Clear!!')
-    Curses.refresh
+    renderer.print_gameclear
     while Curses.getch != ?q; end
 end
 
