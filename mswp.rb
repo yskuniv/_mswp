@@ -1,157 +1,112 @@
 # -*- coding: utf-8 -*-
 require './mdarray.rb'
 
+require 'forwardable'
+
 class MSwp
+    class IllegalOperationError < StandardError
+    end
+
+    class GameOverException < StandardError
+    end
+
+    class GameClearException < StandardError
+    end
+
     class Cell
+        attr_accessor :mined, :nr_neighbor_mines
+
         def initialize
-            @inner_state = 0
-            @state = 0
-        end
-
-        def mine
-            @inner_state = -1
-        end
-
-        def setNumberOfNeighborMines(n)
-            @inner_state = n
-        end
-
-        def isMined
-            @inner_state == -1
-        end
-
-        def getNumberOfNeighborMines
-            @inner_state
+            @touched = false
+            @mark = nil
         end
 
         def touch
-            @state = -1
+            raise IllegalOperationError.new if @touched or @mark == :flagged
+
+            if @mined
+                raise GameOverException.new
+            else
+                @touched = true
+            end
         end
 
-        def reset
-            @state = 0
+        def toggle_flag
+            toggle_mark(:flagged)
+        end
+
+        def toggle_doubt
+            toggle_mark(:doubted)
         end
 
         def flag
-            @state = 1
+            raise IllegalOperationError.new if @touched
+
+            @mark = :flagged
         end
 
-        def doubt
-            @state = 2
+        private
+
+        def toggle_mark(mark)
+            raise IllegalOperationError.new if @touched
+
+            @mark = @mark == mark ? nil : mark
         end
-
-        def isTouched
-            @state == -1
-        end
-
-        def isFlagged
-            @state == 1
-        end
-
-        def isDoubted
-            @state == 2
-        end
-    end
-
-    class GameOverException < Exception
-    end
-
-    class GameClearException < Exception
     end
 
     def initialize(length, nr_mines)
-        @map = MDArray.new(length)
         @nr_mines = nr_mines
-        if @nr_mines >= @map.size
-            raise ArgumentError.new
-        end
 
-        @map.fill { |i| Cell.new }
-        @active = false
-    end
+        @map = MDArray.new(length) { Cell.new }
 
-    def isTouched(pos)
-        if ! @active
-            return
-        end
+        raise ArgumentError.new if @nr_mines >= @map.size
 
-        @map[pos].isTouched
+        @nr_flagged_cells = 0
+
+        @status = :uninitialized
     end
 
     def touch(pos)
-        if ! @active
+        raise IllegalOperationError.new if @status == :dead
+
+        if @status == :uninitialized
             setup(pos)
+            @status = :initialized
         end
 
-        cell = @map[pos]
-        if cell.isFlagged || cell.isTouched
-            return
-        end
-
-        if cell.isMined
-            @active = false
-            raise GameOverException.new
-        else
-            cell.touch
-            @nr_untouched_cells -= 1
-            if @nr_untouched_cells == @nr_mines
-                raise GameClearException.new
-            end
-
-            if cell.getNumberOfNeighborMines == 0
-                __touchNeighbors(pos)
-            end
-        end
+        __touch(pos)
     end
 
-    def toggleFlag(pos)
-        if ! @active
-            return
-        end
+    def toggle_flag(pos)
+        raise IllegalOperationError.new if @status == :dead
 
-        cell = @map[pos]
-        if cell.isTouched
-            return
-        end
-
-        if cell.isFlagged
-            cell.reset
-            @nr_flagged_cells -= 1
-        else
-            cell.flag
-            @nr_flagged_cells += 1
-        end
+        @map[pos].toggle_flag
+        @nr_flagged_cells += cell.mark == :flagged ? 1 : -1
     end
 
-    def toggleDoubt(pos)
-        if ! @active
-            return
-        end
+    def toggle_doubt(pos)
+        raise IllegalOperationError.new if @status == :dead
 
         cell = @map[pos]
-        if cell.isTouched
-            return
+
+        begin
+            cell.toggle_doubt
+        rescue Cell::IllegalOperationError
+            raise IllegalOperationError.new
         end
 
-        if cell.isDoubted
-            cell.reset
-        else
-            if cell.isFlagged
-                @nr_flagged_cells -= 1
-            end
-            cell.doubt
-        end
+        # if cell.isFlagged
+        #     @nr_flagged_cells -= 1
+        # end
+        # cell.doubt
     end
 
-    def touchNeighbors(pos)
-        if ! @active
-            return
-        end
+    def touch_neighbors(pos)
+        raise IllegalOperationError.new if @status == :dead
 
         cell = @map[pos]
-        if ! cell.isTouched
-            return
-        end
+
+        raise IllegalOperationError.new unless cell.touched
 
         nr_flagged_cells = @map.neighbor8_with_index(pos).inject(0) { |sum, (neighbor, i)|
             sum + (neighbor.isFlagged ? 1 : 0)
@@ -163,63 +118,67 @@ class MSwp
         __touchNeighbors(pos)
     end
 
-    def flagNeighbors(pos)
-        if ! @active
-            return
-        end
+    def flag_neighbors(pos)
+        raise IllegalOperationError.new if @status == :dead
 
         cell = @map[pos]
-        if ! cell.isTouched
-            return
-        end
 
-        nr_untouched_cells = @map.neighbor8_with_index(pos).inject(0) { |sum, (neighbor, i)|
-            sum + (neighbor.isTouched ? 0 : 1)
-        }
-        if nr_untouched_cells != cell.getNumberOfNeighborMines
-            return
-        end
+        raise IllegalOperationError.new unless cell.touched
 
-        @map.neighbor8_with_index(pos).each { |(neighbor, i)|
-            if ! (neighbor.isTouched || neighbor.isFlagged)
-                neighbor.flag
-                @nr_flagged_cells += 1
-            end
-        }
+        nr_untouched_cells = @map.neighbor8_with_index(pos).map { |(c, _)| c.touched ? 0 : 1 }.inject(0, &:+)
+        raise IllegalOperationError.new unless nr_untouched_cells == cell.nr_neighbor_mines
+
+        @map.neighbor8_with_index(pos).each { |(c, _)| c.flag }
     end
 
-    def each
-        @map.each_with_index { |cell, pos|
-            yield(Marshal.load(Marshal.dump(cell)).freeze, pos)
-        }
-    end
+    # def each
+    #     @map.each_with_index { |cell, pos|
+    #         yield(Marshal.load(Marshal.dump(cell)).freeze, pos)
+    #     }
+    # end
 
     attr_reader :active, :nr_mines, :nr_untouched_cells, :nr_flagged_cells
 
     private
 
     def setup(pos)
+        mined_cells = (@map.all - [@map[pos]] - (@nr_mines <= @map.size - 3 ** @map.dimension ?
+                                                     @map.neighbor8_with_index(pos).map { |(cell, i)| cell } :
+                                                     [])).sort_by { rand }[0...@nr_mines]
         # 地雷の配置
-        (@map.all - [@map[pos]] - (@nr_mines <= @map.size - 3 ** @map.dimension ?
-                                   @map.neighbor8_with_index(pos).map { |(cell, i)| cell } :
-                                   [])).sort_by { rand }[0...@nr_mines].each { |cell| cell.mine }
+        mined_cells.each do |c|
+            c.mined = true
+        end
+
         # 近傍地雷数の計算
-        @map.each_with_index { |cell, i|
-            if ! cell.isMined
-                cell.setNumberOfNeighborMines(@map.neighbor8_with_index(i).inject(0) { |sum, (neighbor, j)|
-                                                  sum += neighbor.isMined ? 1 : 0
-                                              })
-            end
-        }
+        @map.each_with_index.reject { |c, _| c.mined  }.each do |cell, i|
+            cell.nr_neighbor_mines = @map.neighbor8_with_index(i).map { |c| c.mined ? 1 : 0 }.inject(0, &:+)
+        end
 
         @nr_untouched_cells = @map.size
-        @nr_flagged_cells = 0
+        # @nr_flagged_cells = 0
         @active = true
     end
 
-    def __touchNeighbors(pos)
-        @map.neighbor8_with_index(pos).each { |(cell, i)|
-            touch(i)
-        }
+    def inner_touch_neighbors(pos)
+        @map.eight_neighbors_with_index_at(pos).each do |_, p|
+            inner_touch(p)
+        end
+    end
+
+    def inner_touch(pos)
+        cell = @map[pos]
+
+        begin
+            cell.touch
+        rescue GameOverException
+            @status = :dead
+            raise GameOverException.new
+        end
+
+        @nr_untouched_cells -= 1
+        raise GameClearException.new if @nr_untouched_cells == @nr_mines
+
+        __touchNeighbors(pos) if cell.nr_neighbor_mines == 0
     end
 end

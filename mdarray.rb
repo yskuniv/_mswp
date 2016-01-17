@@ -1,194 +1,99 @@
 class MDArray
-    class ElemRef
-        def initialize(array, index)
-            @array = array
-            @index = index
+    class InnerMDArray
+        def initialize(length, index_prefix = [], &block)
+            if length.length == 0
+                @value = block.call(index_prefix) if block
+            else
+                length_head = length.first
+                sub_length = length.drop(1)
+                @array = (0...length_head).map { |i| InnerMDArray.new(sub_length, index_prefix + [i], &block) }
+            end
+
+            nil
         end
 
-        def +@
-            @array[@index]
+        def [](index)
+            if index.length == 0
+                @value
+            else
+                index_head = index.first
+                sub_mdindex = index.drop(1)
+                @array[index_head][sub_mdindex]
+            end
         end
 
-        def <<(value)
-            @array[@index] = value
-        end
-    end
-
-    def initialize(length, init = nil)
-        if length.length == 0
-            raise ArgumentError.new "Zero-dimensioanl array is unsupported"
-        end
-
-        @length = length.freeze
-        @array = create_array(@length, init)
-        @size = @length.inject(1) { |ret, val|
-            ret * val
-        }
-    end
-
-    def dimension
-        @length.length
-    end
-
-    def is_valid_index(index)
-        index.length == dimension && __is_valid_index(index)
-    end
-
-    def all
-        __all
-    end
-
-    def indexes
-        __indexes
-    end
-
-    def [](index)
-        if ! is_valid_index(index) then
-            raise IndexError.new
+        def []=(index, value)
+            if index.length == 0
+                @value = value
+            else
+                index_head = index.first
+                sub_mdindex = index.drop(1)
+                @array[index_head][sub_mdindex] = value
+            end
         end
 
-        +ref_at(index)
-    end
-
-    def []=(index, value)
-        if ! is_valid_index(index) then
-            raise IndexError.new
+        def each_with_mdindex(index_prefix, &block)
+            unless @array
+                block.call([@value, index_prefix])
+            else
+                @array.each_with_index do |sub_mdarray, i|
+                    sub_mdarray.each_with_mdindex(index_prefix + [i], &block)
+                end
+            end
         end
 
-        ref_at(index) << value
-    end
-
-    def each
-        __each_with_index { |ref, index|
-            yield(+ref)
-        }
-    end
-
-    def each_with_index
-        __each_with_index { |ref, index|
-            yield(+ref, index)
-        }
-    end
-
-    def fill
-        __each_with_index { |ref, index|
-            ref << yield(index)
-        }
-    end
-
-    def neighbor4_with_index(index)
-        if ! is_valid_index(index) then
-            raise IndexError.new
+        def neighbor4_with_mdindex(index, index_prefix, &block)
+            if index.length == 0
+                []
+            else
+                index_head = index.first
+                sub_mdindex = index.drop(1)
+                @array[index_head].neighbor4_with_mdindex(sub_mdindex, index_prefix + [index_head], &block)
+                [-1, 1].map { |d| index_head + d }.select { |i| (0...@array.length).include?(i) }.each do |i|
+                    block.call([@array[i][sub_mdindex], index_prefix + [i] + sub_mdindex])
+                end
+            end
         end
 
-        __neighbor4_with_index(index)
-    end
-
-    def neighbor8_with_index(index)
-        if ! is_valid_index(index) then
-            raise IndexError.new
-        end
-
-        tmp = neighbor8_and_self_with_index(index)
-        tmp.delete([+ref_at(index), index])
-        tmp
-    end
-
-    attr_reader :length, :size
-
-    private
-
-    def create_array(length, init)
-        if length.length == 1
-            Array.new(length[0], init)
-        else
-            Array.new(length[0]) {
-                create_array(length[1..-1], init)
-            }.freeze
+        def neighbor8_and_self_with_mdindex(index, index_prefix, &block)
+            if index.length == 0
+                @value
+            else
+                index_head = index.first
+                sub_mdindex = index.drop(1)
+                (-1..1).map { |d| index_head + d }.select { |i| (0...@array.length).include?(i) }.each do |i|
+                    @array[i].neighbor8_and_self_with_mdindex(sub_mdindex, index_prefix + [i], &block)
+                end
+            end
         end
     end
 
-    def __is_valid_index(index, array = @array)
-        if index.length == 0
-            true
-        else
-            (0...array.length) === index[0] && __is_valid_index(index[1..-1], array[index[0]])
-        end
+    def initialize(length, &block)
+        @inner_mdarray = InnerMDArray.new(length, &block)
     end
 
-    def __all(array = @array, c = 0)
-        if c == dimension
-            [array]
-        else
-            array.inject([]) { |buf, elem|
-                buf + __all(elem, c + 1)
-            }
-        end
-    end
+    # def dimension
+    #     @length.length
+    # end
 
-    def __indexes(length = @length, elem_index = [])
-        if length.length == 0
-            [elem_index.freeze]
-        else
-            (0...length[0]).inject([]) { |buf, i|
-                buf + __indexes(length[1..-1], elem_index + [i])
-            }
-        end
-    end
+    # def is_valid_index(index)
+    #     index.length == dimension && __is_valid_index(index)
+    # end
 
-    def ref_at(index, array = @array)
-        if index.length == 1
-            ElemRef.new(array, index[0])
-        else
-            ref_at(index[1..-1], array[index[0]])
-        end
-    end
+    # attr_reader :length, :size
+end
 
-    def __each_with_index(array = @array, elem_index = [], &block)
-        if elem_index.length == dimension - 1
-            array.length.times { |i|
-                block.call(ElemRef.new(array, i), (elem_index + [i]).freeze)
-            }
-        else
-            array.length.times { |i|
-                __each_with_index(array[i], elem_index + [i], &block)
-            }
-        end
-    end
+c = -1
+a = MDArray::InnerMDArray.new([5, 5]) { |mi| c += 1 }
 
-    def __neighbor4_with_index(index, array = @array, elem_index = [])
-        if index.length == 1
-            [index[0] - 1, index[0] + 1].delete_if { |i|
-                ! ((0...array.length) === i)
-            }.inject([]) { |ret, i|
-                ret + [[array[i],
-                        (elem_index + [i]).freeze]]
-            }
-        else
-            [index[0] - 1, index[0], index[0] + 1].delete_if { |i|
-                ! ((0...array.length) === i)
-            }.inject([]) { |ret, i|
-                ret + (i == index[0] ?
-                       __neighbor4_with_index(index[1..-1],
-                                              array[i],
-                                              elem_index + [i]) :
-                       [[+ref_at(index[1..-1], array[i]),
-                         (elem_index + [i] + index[1..-1]).freeze]])
-            }
-        end
-    end
+a.each_with_mdindex do |e, mi|
+    puts "#{mi}: #{e}"
+end
 
-    def neighbor8_and_self_with_index(index, array = @array, elem_index = [])
-        if index.length == 0
-            [[array, elem_index.freeze]]
-        else
-            [index[0] - 1, index[0], index[0] + 1].delete_if { |i|
-                ! ((0...array.length) === i)
-            }.inject([]) { |ret, i|
-                ret + neighbor8_and_self_with_index(index[1..-1],
-                                                    array[i],
-                                                    elem_index + [i])
-            }
-        end
-    end
+a.neighbor4_with_mdindex([3, 3]) do |e, mi|
+    puts "#{mi}: #{e}"
+end
+
+a.neighbor4_with_mdindex([0, 3]) do |e, mi|
+    puts "#{mi}: #{e}"
 end
