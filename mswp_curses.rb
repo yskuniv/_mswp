@@ -36,8 +36,8 @@ end
 
 def print_field(ms, cur)
     header = "Mines: #{ms.nr_mines}, Flagged: #{ms.nr_flagged_cells}, Untouched: #{ms.nr_untouched_cells}, Position: (#{cur.pos.reverse.join(', ')})"
-    header << " " * (Curses.cols - header.length)
-    curses_print header, 0, 0, Curses.color_pair(2)
+    curses_print header + " " * (Curses.cols - header.length),
+                 0, 0, Curses.color_pair(2)
 
     ms.each do |cell, pos|
         y = pos[2] + (MAP_HEIGHT + 1) * pos[0] + 2
