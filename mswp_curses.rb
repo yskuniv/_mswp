@@ -35,7 +35,7 @@ def print_field(ms, cur)
     Curses.addstr(header)
     Curses.attroff(Curses::A_COLOR)
 
-    ms.each { |cell, pos|
+    ms.each do |cell, pos|
         offset = ((pos == cur.pos) ?
                   10 : (pos.each_index.inject(true) { |tmp, i|
                             (tmp and (pos[i] - cur.pos[i]).abs <= 1)
@@ -77,7 +77,7 @@ def print_field(ms, cur)
                 Curses.attroff(Curses::A_COLOR)
             end
         end
-    }
+    end
 
     Curses.refresh
 end
@@ -105,7 +105,7 @@ Curses.curs_set(0)
 ms = MSwp.new([MAP_HYPER_DEPTH, MAP_DEPTH, MAP_HEIGHT, MAP_WIDTH], NR_MINES)
 cur = Cursor.new([MAP_HYPER_DEPTH, MAP_DEPTH, MAP_HEIGHT, MAP_WIDTH])
 
-th = Thread.new {
+th = Thread.new do
     count = 0
     while true
         Curses.setpos(1, 0)
@@ -115,7 +115,7 @@ th = Thread.new {
         sleep 1
         count += 1
     end
-}
+end
 
 begin
     while true
