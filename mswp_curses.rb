@@ -59,8 +59,8 @@ class CursesRenderer
         Curses.close_screen
     end
 
-    def print_field(ms, cur)
-        header = "Mines: #{ms.nr_mines}, Flagged: #{ms.nr_flagged_cells}, Untouched: #{ms.nr_untouched_cells}, Position: (#{cur.pos.reverse.join(', ')})"
+    def print_field(ms, cur_pos)
+        header = "Mines: #{ms.nr_mines}, Flagged: #{ms.nr_flagged_cells}, Untouched: #{ms.nr_untouched_cells}, Position: (#{cur_pos.reverse.join(', ')})"
         curses_print header + " " * (Curses.cols - header.length),
                      0, 0, Curses.color_pair(2)
 
@@ -69,9 +69,9 @@ class CursesRenderer
             x = CellWidth * ((FieldWidth + MarginBtwDim) * pos[1] + pos[3])
 
             color_offset = case
-                           when pos == cur.pos
+                           when pos == cur_pos
                                10
-                           when pos.zip(cur.pos).all? { |p, c| (p - c).abs <= 1 }
+                           when pos.zip(cur_pos).all? { |p, c| (p - c).abs <= 1 }
                                5
                            else
                                0
@@ -152,7 +152,7 @@ end
 
 begin
     while true
-        renderer.print_field(ms, cur)
+        renderer.print_field(ms, cur.pos)
 
         case Curses.getch
         when ?q
@@ -197,7 +197,7 @@ begin
 rescue MSwp::GameOverException, MSwp::GameClearException => e
     counter_thread.kill
 
-    renderer.print_field(ms, cur)
+    renderer.print_field(ms, cur.pos)
     case e
     when MSwp::GameOverException
         renderer.print_gameover
