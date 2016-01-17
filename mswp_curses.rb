@@ -45,8 +45,8 @@ def print_field(ms, cur)
                  0, 0, Curses.color_pair(2)
 
     ms.each do |cell, pos|
-        y = CellHeight * pos[2] + (MAP_HEIGHT + MarginBtwDim) * CellHeight * pos[0] + HeaderHeight
-        x = CellWidth * pos[3] + (MAP_WIDTH + MarginBtwDim) * CellWidth * pos[1]
+        y = CellHeight * ((MAP_HEIGHT + MarginBtwDim) * pos[0] + pos[2]) + HeaderHeight
+        x = CellWidth * ((MAP_WIDTH + MarginBtwDim) * pos[1] + pos[3])
 
         offset = case
                  when pos == cur.pos
