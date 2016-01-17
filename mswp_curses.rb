@@ -114,13 +114,13 @@ class CursesRenderer
     end
 
     def print_gameover
-        Curses.setpos((MAP_HEIGHT + 1) * MAP_HYPER_DEPTH + 2, 0)
+        Curses.setpos(CellHeight * (MAP_HEIGHT + MarginBtwDim) * MAP_HYPER_DEPTH + 2, 0)
         Curses.addstr('Game Over...')
         Curses.refresh
     end
 
     def print_gameclear
-        Curses.setpos((MAP_HEIGHT + 1) * MAP_HYPER_DEPTH + 2, 0)
+        Curses.setpos(CellHeight * (MAP_HEIGHT + MarginBtwDim) * MAP_HYPER_DEPTH + 2, 0)
         Curses.addstr('Game Clear!!')
         Curses.refresh
     end
