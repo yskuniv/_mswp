@@ -43,11 +43,13 @@ def print_field(ms, cur)
         y = pos[2] + (MAP_HEIGHT + 1) * pos[0] + 2
         x = 2 * pos[3] + (MAP_WIDTH + 1) * 2 * pos[1]
 
-        offset = ((pos == cur.pos) ?
-                  10 : (pos.each_index.inject(true) { |tmp, i|
-                            (tmp and (pos[i] - cur.pos[i]).abs <= 1)
-                        } ?
-                        5 : 0))
+        offset = if pos == cur.pos
+                     10
+                 elsif pos.each_index.inject(true) { |t, i| (t and (pos[i] - cur.pos[i]).abs <= 1) }
+                     5
+                 else
+                     0
+                 end
 
         str, attrs = if ms.active
                          if cell.isFlagged
