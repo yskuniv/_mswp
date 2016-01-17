@@ -94,8 +94,8 @@ Curses.init_pair(15, Curses::COLOR_RED, Curses::COLOR_BLACK)
 Curses.noecho
 Curses.curs_set(0)
 
-$ms = MSwp.new([MAP_HYPER_DEPTH, MAP_DEPTH, MAP_HEIGHT, MAP_WIDTH], NR_MINES)
-$cur = Cursor.new([MAP_HYPER_DEPTH, MAP_DEPTH, MAP_HEIGHT, MAP_WIDTH])
+ms = MSwp.new([MAP_HYPER_DEPTH, MAP_DEPTH, MAP_HEIGHT, MAP_WIDTH], NR_MINES)
+cur = Cursor.new([MAP_HYPER_DEPTH, MAP_DEPTH, MAP_HEIGHT, MAP_WIDTH])
 
 th = Thread.new {
     count = 0
@@ -111,58 +111,58 @@ th = Thread.new {
 
 begin
     while true
-        print_field($ms, $cur)
+        print_field(ms, cur)
 
         case Curses.getch
         when ?q
             break
         when ?h
-            $cur.move(3, -1)
+            cur.move(3, -1)
         when ?l
-            $cur.move(3, 1)
+            cur.move(3, 1)
         when ?k
-            $cur.move(2, -1)
+            cur.move(2, -1)
         when ?j
-            $cur.move(2, 1)
+            cur.move(2, 1)
         when ?H
-            $cur.move(1, -1)
+            cur.move(1, -1)
         when ?L
-            $cur.move(1, 1)
+            cur.move(1, 1)
         when ?K
-            $cur.move(0, -1)
+            cur.move(0, -1)
         when ?J
-            $cur.move(0, 1)
+            cur.move(0, 1)
         when ?\s
-            if $ms.isTouched($cur.pos)
-                $ms.touchNeighbors($cur.pos)
+            if ms.isTouched(cur.pos)
+                ms.touchNeighbors(cur.pos)
             else
-                $ms.touch($cur.pos)
+                ms.touch(cur.pos)
             end
         when ?f
-            if $ms.isTouched($cur.pos)
-                $ms.flagNeighbors($cur.pos)
+            if ms.isTouched(cur.pos)
+                ms.flagNeighbors(cur.pos)
             else
-                $ms.toggleFlag($cur.pos)
+                ms.toggleFlag(cur.pos)
             end
         when ??
-            $ms.toggleDoubt($cur.pos)
+            ms.toggleDoubt(cur.pos)
         end
 
-        # if $ms.isTouched($cur.pos)
-        #     $ms.flagNeighbors($cur.pos)
-        #     $ms.touchNeighbors($cur.pos)
+        # if ms.isTouched(cur.pos)
+        #     ms.flagNeighbors(cur.pos)
+        #     ms.touchNeighbors(cur.pos)
         # end
     end
 rescue MSwp::GameOverException
     th.kill
-    print_field($ms, $cur)
+    print_field(ms, cur)
     Curses.setpos((MAP_HEIGHT + 1) * MAP_HYPER_DEPTH + 2, 0)
     Curses.addstr('Game Over...')
     Curses.refresh
     while Curses.getch != ?q; end
 rescue MSwp::GameClearException
     th.kill
-    print_field($ms, $cur)
+    print_field(ms, cur)
     Curses.setpos((MAP_HEIGHT + 1) * MAP_HYPER_DEPTH + 2, 0)
     Curses.addstr('Game Clear!!')
     Curses.refresh
