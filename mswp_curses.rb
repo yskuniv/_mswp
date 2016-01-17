@@ -58,12 +58,12 @@ def print_field(ms, cur)
                        end
 
         str, attrs = if ms.active
-                         case
-                         when cell.isFlagged
+                         case cell
+                         when :isFlagged.to_proc
                              [' !', Curses.color_pair(3 + color_offset)]
-                         when cell.isDoubted
+                         when :isDoubted.to_proc
                              [' ?', Curses.color_pair(4 + color_offset)]
-                         when cell.isTouched
+                         when :isTouched.to_proc
                              [(cell.getNumberOfNeighborMines == 0) ?
                                   ' .' : '%2d' % cell.getNumberOfNeighborMines,
                               Curses.color_pair(1 + color_offset)]
@@ -71,8 +71,8 @@ def print_field(ms, cur)
                              ['  ', Curses.color_pair(2 + color_offset)]
                          end
                      else
-                         case
-                         when cell.isMined
+                         case cell
+                         when :isMined.to_proc
                              [' *', Curses.color_pair(5 + color_offset)]
                          else
                              [(cell.getNumberOfNeighborMines == 0) ?
