@@ -51,7 +51,7 @@ def print_field(ms, cur)
         color_offset = case
                        when pos == cur.pos
                            10
-                       when pos.each_index.inject(true) { |t, i| (t and (pos[i] - cur.pos[i]).abs <= 1) }
+                       when pos.zip(cur.pos).all? { |p, c| (p - c).abs <= 1 }
                            5
                        else
                            0
