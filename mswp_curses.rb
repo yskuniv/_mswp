@@ -36,7 +36,8 @@ def print_field(ms, cur)
                         5 : 0))
 
         Curses.setpos(pos[2] + (MAP_HEIGHT + 1) * pos[0] + 2, 2 * pos[3] + (MAP_WIDTH + 1) * 2 * pos[1])
-        if ms.active and ! cell.isTouched
+
+        if ms.active
             if cell.isFlagged
                 Curses.attron(Curses.color_pair(3 + offset))
                 Curses.addstr(" !")
@@ -44,6 +45,12 @@ def print_field(ms, cur)
             elsif cell.isDoubted
                 Curses.attron(Curses.color_pair(4 + offset))
                 Curses.addstr(" ?")
+                Curses.attroff(Curses::A_COLOR)
+            elsif cell.isTouched
+                Curses.attron(Curses.color_pair(1 + offset))
+                Curses.addstr((cell.getNumberOfNeighborMines == 0) ?
+                                  " ." :
+                                  sprintf('%2d', cell.getNumberOfNeighborMines))
                 Curses.attroff(Curses::A_COLOR)
             else
                 Curses.attron(Curses.color_pair(2 + offset))
