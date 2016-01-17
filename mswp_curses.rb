@@ -21,11 +21,11 @@ class Cursor
     attr_reader :pos
 end
 
-MAP_WIDTH = ARGV[0].to_i
-MAP_HEIGHT = ARGV[1].to_i
-MAP_DEPTH = ARGV[2].to_i
-MAP_HYPER_DEPTH = ARGV[3].to_i
-NR_MINES = ARGV[4].to_i
+FieldWidth = ARGV[0].to_i
+FieldHeight = ARGV[1].to_i
+FieldDepth = ARGV[2].to_i
+FieldHyperDepth = ARGV[3].to_i
+NumberOfMines = ARGV[4].to_i
 
 class CursesRenderer
     CellWidth = 2
@@ -65,8 +65,8 @@ class CursesRenderer
                      0, 0, Curses.color_pair(2)
 
         ms.each do |cell, pos|
-            y = CellHeight * ((MAP_HEIGHT + MarginBtwDim) * pos[0] + pos[2]) + HeaderHeight
-            x = CellWidth * ((MAP_WIDTH + MarginBtwDim) * pos[1] + pos[3])
+            y = CellHeight * ((FieldHeight + MarginBtwDim) * pos[0] + pos[2]) + HeaderHeight
+            x = CellWidth * ((FieldWidth + MarginBtwDim) * pos[1] + pos[3])
 
             color_offset = case
                            when pos == cur.pos
@@ -114,13 +114,13 @@ class CursesRenderer
     end
 
     def print_gameover
-        Curses.setpos(CellHeight * (MAP_HEIGHT + MarginBtwDim) * MAP_HYPER_DEPTH + 2, 0)
+        Curses.setpos(CellHeight * (FieldHeight + MarginBtwDim) * FieldHyperDepth + 2, 0)
         Curses.addstr('Game Over...')
         Curses.refresh
     end
 
     def print_gameclear
-        Curses.setpos(CellHeight * (MAP_HEIGHT + MarginBtwDim) * MAP_HYPER_DEPTH + 2, 0)
+        Curses.setpos(CellHeight * (FieldHeight + MarginBtwDim) * FieldHyperDepth + 2, 0)
         Curses.addstr('Game Clear!!')
         Curses.refresh
     end
@@ -137,8 +137,8 @@ end
 
 renderer = CursesRenderer.new
 
-ms = MSwp.new([MAP_HYPER_DEPTH, MAP_DEPTH, MAP_HEIGHT, MAP_WIDTH], NR_MINES)
-cur = Cursor.new([MAP_HYPER_DEPTH, MAP_DEPTH, MAP_HEIGHT, MAP_WIDTH])
+ms = MSwp.new([FieldHyperDepth, FieldDepth, FieldHeight, FieldWidth], NumberOfMines)
+cur = Cursor.new([FieldHyperDepth, FieldDepth, FieldHeight, FieldWidth])
 
 counter_thread = Thread.new do
     count = 0
