@@ -27,85 +27,97 @@ MAP_DEPTH = ARGV[2].to_i
 MAP_HYPER_DEPTH = ARGV[3].to_i
 NR_MINES = ARGV[4].to_i
 
-def curses_print(str, y, x, attrs)
-    Curses.setpos(y, x)
-    Curses.attron(attrs)
-    Curses.addstr(str)
-    Curses.attroff(attrs)
-end
+class CursesRenderer
+    CellWidth = 2
+    CellHeight = 1
+    HeaderHeight = 2
+    MarginBtwDim = 1
 
-CellWidth = 2
-CellHeight = 1
-HeaderHeight = 2
-MarginBtwDim = 1
-
-def print_field(ms, cur)
-    header = "Mines: #{ms.nr_mines}, Flagged: #{ms.nr_flagged_cells}, Untouched: #{ms.nr_untouched_cells}, Position: (#{cur.pos.reverse.join(', ')})"
-    curses_print header + " " * (Curses.cols - header.length),
-                 0, 0, Curses.color_pair(2)
-
-    ms.each do |cell, pos|
-        y = CellHeight * ((MAP_HEIGHT + MarginBtwDim) * pos[0] + pos[2]) + HeaderHeight
-        x = CellWidth * ((MAP_WIDTH + MarginBtwDim) * pos[1] + pos[3])
-
-        color_offset = case
-                       when pos == cur.pos
-                           10
-                       when pos.zip(cur.pos).all? { |p, c| (p - c).abs <= 1 }
-                           5
-                       else
-                           0
-                       end
-
-        str, attrs = if ms.active
-                         case cell
-                         when :isFlagged.to_proc
-                             [' !', Curses.color_pair(3 + color_offset)]
-                         when :isDoubted.to_proc
-                             [' ?', Curses.color_pair(4 + color_offset)]
-                         when :isTouched.to_proc
-                             [(cell.getNumberOfNeighborMines == 0) ?
-                                  ' .' : '%2d' % cell.getNumberOfNeighborMines,
-                              Curses.color_pair(1 + color_offset)]
-                         else
-                             ['  ', Curses.color_pair(2 + color_offset)]
-                         end
-                     else
-                         case cell
-                         when :isMined.to_proc
-                             [' *', Curses.color_pair(5 + color_offset)]
-                         else
-                             [(cell.getNumberOfNeighborMines == 0) ?
-                                  ' .' : '%2d' % cell.getNumberOfNeighborMines,
-                              Curses.color_pair(1 + color_offset)]
-                         end
-                     end
-
-        curses_print str, y, x, attrs
+    def initialize
+        Curses.init_screen
+        Curses.start_color
+        Curses.init_pair(1, Curses::COLOR_WHITE, Curses::COLOR_BLACK)
+        Curses.init_pair(2, Curses::COLOR_BLACK, Curses::COLOR_WHITE)
+        Curses.init_pair(3, Curses::COLOR_RED, Curses::COLOR_WHITE)
+        Curses.init_pair(4, Curses::COLOR_BLUE, Curses::COLOR_WHITE)
+        Curses.init_pair(5, Curses::COLOR_BLACK, Curses::COLOR_RED)
+        Curses.init_pair(6, Curses::COLOR_WHITE, Curses::COLOR_BLUE)
+        Curses.init_pair(7, Curses::COLOR_BLACK, Curses::COLOR_CYAN)
+        Curses.init_pair(8, Curses::COLOR_RED, Curses::COLOR_CYAN)
+        Curses.init_pair(9, Curses::COLOR_BLUE, Curses::COLOR_CYAN)
+        Curses.init_pair(10, Curses::COLOR_BLACK, Curses::COLOR_RED)
+        Curses.init_pair(11, Curses::COLOR_WHITE, Curses::COLOR_GREEN)
+        Curses.init_pair(12, Curses::COLOR_BLACK, Curses::COLOR_YELLOW)
+        Curses.init_pair(13, Curses::COLOR_RED, Curses::COLOR_YELLOW)
+        Curses.init_pair(14, Curses::COLOR_BLUE, Curses::COLOR_YELLOW)
+        Curses.init_pair(15, Curses::COLOR_RED, Curses::COLOR_BLACK)
+        Curses.noecho
+        Curses.curs_set(0)
     end
 
-    Curses.refresh
+    def cleanup
+        Curses.close_screen
+    end
+
+    def print_field(ms, cur)
+        header = "Mines: #{ms.nr_mines}, Flagged: #{ms.nr_flagged_cells}, Untouched: #{ms.nr_untouched_cells}, Position: (#{cur.pos.reverse.join(', ')})"
+        curses_print header + " " * (Curses.cols - header.length),
+                     0, 0, Curses.color_pair(2)
+
+        ms.each do |cell, pos|
+            y = CellHeight * ((MAP_HEIGHT + MarginBtwDim) * pos[0] + pos[2]) + HeaderHeight
+            x = CellWidth * ((MAP_WIDTH + MarginBtwDim) * pos[1] + pos[3])
+
+            color_offset = case
+                           when pos == cur.pos
+                               10
+                           when pos.zip(cur.pos).all? { |p, c| (p - c).abs <= 1 }
+                               5
+                           else
+                               0
+                           end
+
+            str, attrs = if ms.active
+                             case cell
+                             when :isFlagged.to_proc
+                                 [' !', Curses.color_pair(3 + color_offset)]
+                             when :isDoubted.to_proc
+                                 [' ?', Curses.color_pair(4 + color_offset)]
+                             when :isTouched.to_proc
+                                 [(cell.getNumberOfNeighborMines == 0) ?
+                                      ' .' : '%2d' % cell.getNumberOfNeighborMines,
+                                  Curses.color_pair(1 + color_offset)]
+                             else
+                                 ['  ', Curses.color_pair(2 + color_offset)]
+                             end
+                         else
+                             case cell
+                             when :isMined.to_proc
+                                 [' *', Curses.color_pair(5 + color_offset)]
+                             else
+                                 [(cell.getNumberOfNeighborMines == 0) ?
+                                      ' .' : '%2d' % cell.getNumberOfNeighborMines,
+                                  Curses.color_pair(1 + color_offset)]
+                             end
+                         end
+
+            curses_print str, y, x, attrs
+        end
+
+        Curses.refresh
+    end
+
+    private
+
+    def curses_print(str, y, x, attrs)
+        Curses.setpos(y, x)
+        Curses.attron(attrs)
+        Curses.addstr(str)
+        Curses.attroff(attrs)
+    end
 end
 
-Curses.init_screen
-Curses.start_color
-Curses.init_pair(1, Curses::COLOR_WHITE, Curses::COLOR_BLACK)
-Curses.init_pair(2, Curses::COLOR_BLACK, Curses::COLOR_WHITE)
-Curses.init_pair(3, Curses::COLOR_RED, Curses::COLOR_WHITE)
-Curses.init_pair(4, Curses::COLOR_BLUE, Curses::COLOR_WHITE)
-Curses.init_pair(5, Curses::COLOR_BLACK, Curses::COLOR_RED)
-Curses.init_pair(6, Curses::COLOR_WHITE, Curses::COLOR_BLUE)
-Curses.init_pair(7, Curses::COLOR_BLACK, Curses::COLOR_CYAN)
-Curses.init_pair(8, Curses::COLOR_RED, Curses::COLOR_CYAN)
-Curses.init_pair(9, Curses::COLOR_BLUE, Curses::COLOR_CYAN)
-Curses.init_pair(10, Curses::COLOR_BLACK, Curses::COLOR_RED)
-Curses.init_pair(11, Curses::COLOR_WHITE, Curses::COLOR_GREEN)
-Curses.init_pair(12, Curses::COLOR_BLACK, Curses::COLOR_YELLOW)
-Curses.init_pair(13, Curses::COLOR_RED, Curses::COLOR_YELLOW)
-Curses.init_pair(14, Curses::COLOR_BLUE, Curses::COLOR_YELLOW)
-Curses.init_pair(15, Curses::COLOR_RED, Curses::COLOR_BLACK)
-Curses.noecho
-Curses.curs_set(0)
+renderer = CursesRenderer.new
 
 ms = MSwp.new([MAP_HYPER_DEPTH, MAP_DEPTH, MAP_HEIGHT, MAP_WIDTH], NR_MINES)
 cur = Cursor.new([MAP_HYPER_DEPTH, MAP_DEPTH, MAP_HEIGHT, MAP_WIDTH])
@@ -124,7 +136,7 @@ end
 
 begin
     while true
-        print_field(ms, cur)
+        renderer.print_field(ms, cur)
 
         case Curses.getch
         when ?q
@@ -168,18 +180,18 @@ begin
     end
 rescue MSwp::GameOverException
     th.kill
-    print_field(ms, cur)
+    renderer.print_field(ms, cur)
     Curses.setpos((MAP_HEIGHT + 1) * MAP_HYPER_DEPTH + 2, 0)
     Curses.addstr('Game Over...')
     Curses.refresh
     while Curses.getch != ?q; end
 rescue MSwp::GameClearException
     th.kill
-    print_field(ms, cur)
+    renderer.print_field(ms, cur)
     Curses.setpos((MAP_HEIGHT + 1) * MAP_HYPER_DEPTH + 2, 0)
     Curses.addstr('Game Clear!!')
     Curses.refresh
     while Curses.getch != ?q; end
 end
 
-Curses.close_screen
+renderer.cleanup
