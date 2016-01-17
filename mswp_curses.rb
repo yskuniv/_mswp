@@ -43,20 +43,22 @@ def print_field(ms, cur)
         y = pos[2] + (MAP_HEIGHT + 1) * pos[0] + 2
         x = 2 * pos[3] + (MAP_WIDTH + 1) * 2 * pos[1]
 
-        offset = if pos == cur.pos
+        offset = case
+                 when pos == cur.pos
                      10
-                 elsif pos.each_index.inject(true) { |t, i| (t and (pos[i] - cur.pos[i]).abs <= 1) }
+                 when pos.each_index.inject(true) { |t, i| (t and (pos[i] - cur.pos[i]).abs <= 1) }
                      5
                  else
                      0
                  end
 
         str, attrs = if ms.active
-                         if cell.isFlagged
+                         case
+                         when cell.isFlagged
                              [" !", Curses.color_pair(3 + offset)]
-                         elsif cell.isDoubted
+                         when cell.isDoubted
                              [" ?", Curses.color_pair(4 + offset)]
-                         elsif cell.isTouched
+                         when cell.isTouched
                              [(cell.getNumberOfNeighborMines == 0) ?
                                   " ." :
                                   sprintf('%2d', cell.getNumberOfNeighborMines), Curses.color_pair(1 + offset)]
@@ -64,7 +66,8 @@ def print_field(ms, cur)
                              ["  ", Curses.color_pair(2 + offset)]
                          end
                      else
-                         if cell.isMined
+                         case
+                         when cell.isMined
                              [" *", Curses.color_pair(5 + offset)]
                          else
                              [(cell.getNumberOfNeighborMines == 0) ?
