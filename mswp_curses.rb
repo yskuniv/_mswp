@@ -2,23 +2,25 @@
 # -*- coding: utf-8 -*-
 
 require 'curses'
+require 'matrix'
 require './mswp.rb'
 
 class Cursor
-    def initialize(length)
-        @length = length.freeze
-        @pos = Array.new(length.length, 0)
+    def initialize(size)
+        @size = size.freeze
+
+        dim = size.size
+        @pos = Vector[*([0] * dim)]
     end
 
-    def move(dim, delta)
-        if ! ((0...@length[dim]) === @pos[dim] + delta)
-            return
-        end
-
-        @pos[dim] += delta
+    def move(delta)
+        new_pos = @pos + delta
+        @pos = new_pos.zip(@size).all? { |p, s| (0...s).include? p } ? new_pos : @pos
     end
 
-    attr_reader :pos
+    def pos
+        @pos.to_a
+    end
 end
 
 class CursesRenderer
@@ -143,7 +145,7 @@ NumberOfMines = ARGV[4].to_i
 renderer = CursesRenderer.new(FieldHyperDepth, FieldDepth, FieldHeight, FieldWidth)
 
 ms = MSwp.new([FieldHyperDepth, FieldDepth, FieldHeight, FieldWidth], NumberOfMines)
-cur = Cursor.new([FieldHyperDepth, FieldDepth, FieldHeight, FieldWidth])
+cur = Cursor.new(Vector[FieldHyperDepth, FieldDepth, FieldHeight, FieldWidth])
 
 counter_thread = Thread.new do
     count = 0
@@ -163,21 +165,21 @@ begin
         when ?q
             break
         when ?h
-            cur.move(3, -1)
+            cur.move(Vector[0, 0, 0, -1])
         when ?l
-            cur.move(3, 1)
+            cur.move(Vector[0, 0, 0, 1])
         when ?k
-            cur.move(2, -1)
+            cur.move(Vector[0, 0, -1, 0])
         when ?j
-            cur.move(2, 1)
+            cur.move(Vector[0, 0, 1, 0])
         when ?H
-            cur.move(1, -1)
+            cur.move(Vector[0, -1, 0, 0])
         when ?L
-            cur.move(1, 1)
+            cur.move(Vector[0, 1, 0, 0])
         when ?K
-            cur.move(0, -1)
+            cur.move(Vector[-1, 0, 0, 0])
         when ?J
-            cur.move(0, 1)
+            cur.move(Vector[1, 0, 0, 0])
         when ?\s
             if ms.isTouched(cur.pos)
                 ms.touchNeighbors(cur.pos)
