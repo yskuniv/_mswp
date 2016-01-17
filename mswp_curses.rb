@@ -27,7 +27,7 @@ MAP_DEPTH = ARGV[2].to_i
 MAP_HYPER_DEPTH = ARGV[3].to_i
 NR_MINES = ARGV[4].to_i
 
-def printField(ms, cur)
+def print_field(ms, cur)
     ms.each { |cell, pos|
         offset = ((pos == cur.pos) ?
                   10 : (pos.each_index.inject(true) { |tmp, i|
@@ -111,7 +111,7 @@ th = Thread.new {
 
 begin
     while true
-        printField($ms, $cur)
+        print_field($ms, $cur)
 
         case Curses.getch
         when ?q
@@ -155,14 +155,14 @@ begin
     end
 rescue MSwp::GameOverException
     th.kill
-    printField($ms, $cur)
+    print_field($ms, $cur)
     Curses.setpos((MAP_HEIGHT + 1) * MAP_HYPER_DEPTH + 2, 0)
     Curses.addstr('Game Over...')
     Curses.refresh
     while Curses.getch != ?q; end
 rescue MSwp::GameClearException
     th.kill
-    printField($ms, $cur)
+    print_field($ms, $cur)
     Curses.setpos((MAP_HEIGHT + 1) * MAP_HYPER_DEPTH + 2, 0)
     Curses.addstr('Game Clear!!')
     Curses.refresh
