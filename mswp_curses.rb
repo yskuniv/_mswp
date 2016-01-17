@@ -194,15 +194,17 @@ begin
         #     ms.touchNeighbors(cur.pos)
         # end
     end
-rescue MSwp::GameOverException
+rescue MSwp::GameOverException, MSwp::GameClearException => e
     th.kill
+
     renderer.print_field(ms, cur)
-    renderer.print_gameover
-    while Curses.getch != ?q; end
-rescue MSwp::GameClearException
-    th.kill
-    renderer.print_field(ms, cur)
-    renderer.print_gameclear
+    case e
+    when MSwp::GameOverException
+        renderer.print_gameover
+    when MSwp::GameClearException
+        renderer.print_gameclear
+    end
+
     while Curses.getch != ?q; end
 end
 
