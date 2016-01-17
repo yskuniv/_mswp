@@ -48,36 +48,36 @@ def print_field(ms, cur)
         y = CellHeight * ((MAP_HEIGHT + MarginBtwDim) * pos[0] + pos[2]) + HeaderHeight
         x = CellWidth * ((MAP_WIDTH + MarginBtwDim) * pos[1] + pos[3])
 
-        offset = case
-                 when pos == cur.pos
-                     10
-                 when pos.each_index.inject(true) { |t, i| (t and (pos[i] - cur.pos[i]).abs <= 1) }
-                     5
-                 else
-                     0
-                 end
+        color_offset = case
+                       when pos == cur.pos
+                           10
+                       when pos.each_index.inject(true) { |t, i| (t and (pos[i] - cur.pos[i]).abs <= 1) }
+                           5
+                       else
+                           0
+                       end
 
         str, attrs = if ms.active
                          case
                          when cell.isFlagged
-                             [' !', Curses.color_pair(3 + offset)]
+                             [' !', Curses.color_pair(3 + color_offset)]
                          when cell.isDoubted
-                             [' ?', Curses.color_pair(4 + offset)]
+                             [' ?', Curses.color_pair(4 + color_offset)]
                          when cell.isTouched
                              [(cell.getNumberOfNeighborMines == 0) ?
                                   ' .' : '%2d' % cell.getNumberOfNeighborMines,
-                              Curses.color_pair(1 + offset)]
+                              Curses.color_pair(1 + color_offset)]
                          else
-                             ['  ', Curses.color_pair(2 + offset)]
+                             ['  ', Curses.color_pair(2 + color_offset)]
                          end
                      else
                          case
                          when cell.isMined
-                             [' *', Curses.color_pair(5 + offset)]
+                             [' *', Curses.color_pair(5 + color_offset)]
                          else
                              [(cell.getNumberOfNeighborMines == 0) ?
                                   ' .' : '%2d' % cell.getNumberOfNeighborMines,
-                              Curses.color_pair(1 + offset)]
+                              Curses.color_pair(1 + color_offset)]
                          end
                      end
 
