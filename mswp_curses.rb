@@ -34,14 +34,19 @@ def curses_print(str, y, x, attrs)
     Curses.attroff(attrs)
 end
 
+CellWidth = 2
+CellHeight = 1
+HeaderHeight = 2
+MarginBtwDim = 1
+
 def print_field(ms, cur)
     header = "Mines: #{ms.nr_mines}, Flagged: #{ms.nr_flagged_cells}, Untouched: #{ms.nr_untouched_cells}, Position: (#{cur.pos.reverse.join(', ')})"
     curses_print header + " " * (Curses.cols - header.length),
                  0, 0, Curses.color_pair(2)
 
     ms.each do |cell, pos|
-        y = pos[2] + (MAP_HEIGHT + 1) * pos[0] + 2
-        x = 2 * pos[3] + (MAP_WIDTH + 1) * 2 * pos[1]
+        y = CellHeight * pos[2] + (MAP_HEIGHT + MarginBtwDim) * CellHeight * pos[0] + HeaderHeight
+        x = CellWidth * pos[3] + (MAP_WIDTH + MarginBtwDim) * CellWidth * pos[1]
 
         offset = case
                  when pos == cur.pos
