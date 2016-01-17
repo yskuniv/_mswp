@@ -140,7 +140,7 @@ renderer = CursesRenderer.new
 ms = MSwp.new([MAP_HYPER_DEPTH, MAP_DEPTH, MAP_HEIGHT, MAP_WIDTH], NR_MINES)
 cur = Cursor.new([MAP_HYPER_DEPTH, MAP_DEPTH, MAP_HEIGHT, MAP_WIDTH])
 
-th = Thread.new do
+counter_thread = Thread.new do
     count = 0
     loop do
         renderer.print_time(count / 60, count % 60)
@@ -195,7 +195,7 @@ begin
         # end
     end
 rescue MSwp::GameOverException, MSwp::GameClearException => e
-    th.kill
+    counter_thread.kill
 
     renderer.print_field(ms, cur)
     case e
