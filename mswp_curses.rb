@@ -60,8 +60,8 @@ def print_field(ms, cur)
                              [" ?", Curses.color_pair(4 + offset)]
                          when cell.isTouched
                              [(cell.getNumberOfNeighborMines == 0) ?
-                                  " ." :
-                                  sprintf('%2d', cell.getNumberOfNeighborMines), Curses.color_pair(1 + offset)]
+                                  " ." : '%2d' % cell.getNumberOfNeighborMines,
+                              Curses.color_pair(1 + offset)]
                          else
                              ["  ", Curses.color_pair(2 + offset)]
                          end
@@ -71,8 +71,8 @@ def print_field(ms, cur)
                              [" *", Curses.color_pair(5 + offset)]
                          else
                              [(cell.getNumberOfNeighborMines == 0) ?
-                                  " ." :
-                                  sprintf('%2d', cell.getNumberOfNeighborMines), Curses.color_pair(1 + offset)]
+                                  " ." : '%2d' % cell.getNumberOfNeighborMines,
+                              Curses.color_pair(1 + offset)]
                          end
                      end
 
