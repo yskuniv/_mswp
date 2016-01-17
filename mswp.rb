@@ -53,20 +53,20 @@ class MSwp
         end
     end
 
-    class GameOverException < Exception
+    class GameOverException < StandardError
     end
 
-    class GameClearException < Exception
+    class GameClearException < StandardError
     end
 
     def initialize(length, nr_mines)
-        @map = MDArray.new(length)
+        @field = MDArray.new(length)
         @nr_mines = nr_mines
-        if @nr_mines >= @map.size
+        if @nr_mines >= @field.size
             raise ArgumentError.new
         end
 
-        @map.fill { |i| Cell.new }
+        @field.fill { |i| Cell.new }
         @active = false
     end
 
@@ -75,7 +75,7 @@ class MSwp
             return
         end
 
-        @map[pos].isTouched
+        @field[pos].isTouched
     end
 
     def touch(pos)
@@ -83,7 +83,7 @@ class MSwp
             setup(pos)
         end
 
-        cell = @map[pos]
+        cell = @field[pos]
         if cell.isFlagged || cell.isTouched
             return
         end
@@ -109,7 +109,7 @@ class MSwp
             return
         end
 
-        cell = @map[pos]
+        cell = @field[pos]
         if cell.isTouched
             return
         end
@@ -128,7 +128,7 @@ class MSwp
             return
         end
 
-        cell = @map[pos]
+        cell = @field[pos]
         if cell.isTouched
             return
         end
@@ -148,12 +148,12 @@ class MSwp
             return
         end
 
-        cell = @map[pos]
+        cell = @field[pos]
         if ! cell.isTouched
             return
         end
 
-        nr_flagged_cells = @map.neighbor8_with_index(pos).inject(0) { |sum, (neighbor, i)|
+        nr_flagged_cells = @field.neighbor8_with_index(pos).inject(0) { |sum, (neighbor, i)|
             sum + (neighbor.isFlagged ? 1 : 0)
         }
         if nr_flagged_cells != cell.getNumberOfNeighborMines
@@ -168,19 +168,19 @@ class MSwp
             return
         end
 
-        cell = @map[pos]
+        cell = @field[pos]
         if ! cell.isTouched
             return
         end
 
-        nr_untouched_cells = @map.neighbor8_with_index(pos).inject(0) { |sum, (neighbor, i)|
+        nr_untouched_cells = @field.neighbor8_with_index(pos).inject(0) { |sum, (neighbor, i)|
             sum + (neighbor.isTouched ? 0 : 1)
         }
         if nr_untouched_cells != cell.getNumberOfNeighborMines
             return
         end
 
-        @map.neighbor8_with_index(pos).each { |(neighbor, i)|
+        @field.neighbor8_with_index(pos).each { |(neighbor, i)|
             if ! (neighbor.isTouched || neighbor.isFlagged)
                 neighbor.flag
                 @nr_flagged_cells += 1
@@ -189,13 +189,13 @@ class MSwp
     end
 
     def neighbors(pos)
-        @map.neighbor8_with_index(pos).map { |(neighbor, i)|
+        @field.neighbor8_with_index(pos).map { |(neighbor, i)|
             [Marshal.load(Marshal.dump(neighbor)).freeze, i]
         }
     end
 
     def each
-        @map.each_with_index { |cell, pos|
+        @field.each_with_index { |cell, pos|
             yield(Marshal.load(Marshal.dump(cell)).freeze, pos)
         }
     end
@@ -206,25 +206,25 @@ class MSwp
 
     def setup(pos)
         # 地雷の配置
-        (@map.all - [@map[pos]] - (@nr_mines <= @map.size - 3 ** @map.dimension ?
-                                   @map.neighbor8_with_index(pos).map { |(cell, i)| cell } :
-                                   [])).sort_by { rand }[0...@nr_mines].each { |cell| cell.mine }
+        (@field.all - [@field[pos]] - (@nr_mines <= @field.size - 3 ** @field.dimension ?
+                                           @field.neighbor8_with_index(pos).map { |(cell, i)| cell } :
+                                           [])).sort_by { rand }[0...@nr_mines].each { |cell| cell.mine }
         # 近傍地雷数の計算
-        @map.each_with_index { |cell, i|
+        @field.each_with_index { |cell, i|
             if ! cell.isMined
-                cell.setNumberOfNeighborMines(@map.neighbor8_with_index(i).inject(0) { |sum, (neighbor, j)|
+                cell.setNumberOfNeighborMines(@field.neighbor8_with_index(i).inject(0) { |sum, (neighbor, j)|
                                                   sum += neighbor.isMined ? 1 : 0
                                               })
             end
         }
 
-        @nr_untouched_cells = @map.size
+        @nr_untouched_cells = @field.size
         @nr_flagged_cells = 0
         @active = true
     end
 
     def __touchNeighbors(pos)
-        @map.neighbor8_with_index(pos).each { |(cell, i)|
+        @field.neighbor8_with_index(pos).each { |(cell, i)|
             touch(i)
         }
     end
