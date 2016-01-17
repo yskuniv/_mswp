@@ -55,23 +55,23 @@ def print_field(ms, cur)
         str, attrs = if ms.active
                          case
                          when cell.isFlagged
-                             [" !", Curses.color_pair(3 + offset)]
+                             [' !', Curses.color_pair(3 + offset)]
                          when cell.isDoubted
-                             [" ?", Curses.color_pair(4 + offset)]
+                             [' ?', Curses.color_pair(4 + offset)]
                          when cell.isTouched
                              [(cell.getNumberOfNeighborMines == 0) ?
-                                  " ." : '%2d' % cell.getNumberOfNeighborMines,
+                                  ' .' : '%2d' % cell.getNumberOfNeighborMines,
                               Curses.color_pair(1 + offset)]
                          else
-                             ["  ", Curses.color_pair(2 + offset)]
+                             ['  ', Curses.color_pair(2 + offset)]
                          end
                      else
                          case
                          when cell.isMined
-                             [" *", Curses.color_pair(5 + offset)]
+                             [' *', Curses.color_pair(5 + offset)]
                          else
                              [(cell.getNumberOfNeighborMines == 0) ?
-                                  " ." : '%2d' % cell.getNumberOfNeighborMines,
+                                  ' .' : '%2d' % cell.getNumberOfNeighborMines,
                               Curses.color_pair(1 + offset)]
                          end
                      end
