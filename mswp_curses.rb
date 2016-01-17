@@ -31,12 +31,12 @@ def print_field(ms, cur)
     ms.each { |cell, pos|
         offset = ((pos == cur.pos) ?
                   10 : (pos.each_index.inject(true) { |tmp, i|
-                            (tmp && (pos[i] - cur.pos[i]).abs <= 1)
+                            (tmp and (pos[i] - cur.pos[i]).abs <= 1)
                         } ?
                         5 : 0))
 
         Curses.setpos(pos[2] + (MAP_HEIGHT + 1) * pos[0] + 2, 2 * pos[3] + (MAP_WIDTH + 1) * 2 * pos[1])
-        if ms.active && ! cell.isTouched
+        if ms.active and ! cell.isTouched
             if cell.isFlagged
                 Curses.attron(Curses.color_pair(3 + offset))
                 Curses.addstr(" !")
